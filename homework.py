@@ -59,9 +59,9 @@ class Running(Training):
         return super().get_mean_speed()
 
     def get_spent_calories(self) -> float:
-        return ((self.CALORIES_MEAN_SPEED_MULTIPLIER * self.get_mean_speed() +
-                 self.CALORIES_MEAN_SPEED_SHIFT) *
-                self.weight / self.M_IN_KM * (self.duration * self.H_IN_MIN))
+        return ((self.CALORIES_MEAN_SPEED_MULTIPLIER * self.get_mean_speed()
+                 + self.CALORIES_MEAN_SPEED_SHIFT)
+                * self.weight / self.M_IN_KM * (self.duration * self.H_IN_MIN))
 
     def show_training_info(self) -> InfoMessage:
         return InfoMessage('Running', self.duration, self.get_distance(),
@@ -87,9 +87,9 @@ class SportsWalking(Training):
         return super().get_mean_speed()
 
     def get_spent_calories(self) -> float:
-        return ((self.K_1 * self.weight + ((self.get_mean_speed() *
-                self.C_1)**2 / (self.height / self.C_2)) * self.K_2 *
-                self.weight) * (self.duration * self.H_IN_MIN))
+        return ((self.K_1 * self.weight + ((self.get_mean_speed()
+                * self.C_1)**2 / (self.height / self.C_2)) * self.K_2
+                * self.weight) * (self.duration * self.H_IN_MIN))
 
     def show_training_info(self) -> InfoMessage:
         return InfoMessage('SportsWalking', self.duration, self.get_distance(),
@@ -112,12 +112,12 @@ class Swimming(Training):
         return self.action * self.LEN_STEP / self.M_IN_KM
 
     def get_mean_speed(self) -> float:
-        return (self.length_pool * self.count_pool / self.M_IN_KM /
-                self.duration)
+        return (self.length_pool * self.count_pool / self.M_IN_KM
+                / self.duration)
 
     def get_spent_calories(self) -> float:
-        return ((self.get_mean_speed() + self.K_1) * self.K_2 *
-                self.weight * self.duration)
+        return ((self.get_mean_speed() + self.K_1) * self.K_2
+                * self.weight * self.duration)
 
     def show_training_info(self) -> InfoMessage:
         return InfoMessage('Swimming', self.duration, self.get_distance(),
