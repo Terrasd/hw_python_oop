@@ -1,5 +1,9 @@
+from typing import Dict
+
+
 class InfoMessage:
     """Информационное сообщение о тренировке."""
+
     def __init__(self, training_type: str, duration: float,
                  distance: float, speed: float, calories: float):
         self.training_type = training_type
@@ -9,14 +13,16 @@ class InfoMessage:
         self.calories = calories
 
     def get_message(self) -> str:
-        return (f'Тип тренировки: {self.training_type}; Длительность: '
-                f'{self.duration:.3f} ч.; '
-                f'Дистанция: {self.distance:.3f} км; Ср. скорость: '
-                f'{self.speed:.3f} км/ч; Потрачено ккал: {self.calories:.3f}.')
+        return (f'Тип тренировки: {self.training_type}; '
+                f'Длительность: {self.duration:.3f} ч.; '
+                f'Дистанция: {self.distance:.3f} км; '
+                f'Ср. скорость: {self.speed:.3f} км/ч; '
+                f'Потрачено ккал: {self.calories:.3f}.')
 
 
 class Training:
     """Базовый класс тренировки."""
+
     LEN_STEP = 0.65
     M_IN_KM = 1000
     H_IN_MIN = 60
@@ -36,71 +42,55 @@ class Training:
 
     def get_spent_calories(self) -> float:
         """Получить количество затраченных калорий."""
-        pass
+        raise NotImplementedError('Ошибка! Не был определен метод для '
+                                  'подсчета затраченных каллорий!')
 
     def show_training_info(self) -> InfoMessage:
         """Вернуть информационное сообщение о выполненной тренировке."""
-        return InfoMessage('Training', self.duration, self.get_distance(),
-                           self.get_mean_speed(), self.get_spent_calories())
+        return InfoMessage(self.__class__.__name__, self.duration,
+                           self.get_distance(), self.get_mean_speed(),
+                           self.get_spent_calories())
 
 
 class Running(Training):
     """Training: running."""
+
     CALORIES_MEAN_SPEED_MULTIPLIER = 18
     CALORIES_MEAN_SPEED_SHIFT = 1.79
 
-    def __init__(self, action: int, duration: float, weight: float) -> None:
-        super().__init__(action, duration, weight)
-
-    def get_distance(self) -> float:
-        return super().get_distance()
-
-    def get_mean_speed(self) -> float:
-        return super().get_mean_speed()
-
     def get_spent_calories(self) -> float:
         return ((self.CALORIES_MEAN_SPEED_MULTIPLIER * self.get_mean_speed()
-                 + self.CALORIES_MEAN_SPEED_SHIFT)
+                + self.CALORIES_MEAN_SPEED_SHIFT)
                 * self.weight / self.M_IN_KM * (self.duration * self.H_IN_MIN))
-
-    def show_training_info(self) -> InfoMessage:
-        return InfoMessage('Running', self.duration, self.get_distance(),
-                           self.get_mean_speed(), self.get_spent_calories())
 
 
 class SportsWalking(Training):
     """Training: sports walking."""
-    C_1 = 0.278
-    C_2 = 100
-    K_1 = 0.035
-    K_2 = 0.029
+
+    SPD_CNVRSN_FROM_KM_TO_M = 0.278
+    CNVRSN_FROM_CM_TO_M = 100
+    CALORIES_MULTIPLIER_1 = 0.035
+    CALORIES_MULTIPLIER_2 = 0.029
 
     def __init__(self, action: int, duration: float,
                  weight: float, height: float) -> None:
         super().__init__(action, duration, weight)
         self.height = height
 
-    def get_distance(self) -> float:
-        return super().get_distance()
-
-    def get_mean_speed(self) -> float:
-        return super().get_mean_speed()
-
     def get_spent_calories(self) -> float:
-        return ((self.K_1 * self.weight + ((self.get_mean_speed()
-                * self.C_1)**2 / (self.height / self.C_2)) * self.K_2
-            * self.weight) * (self.duration * self.H_IN_MIN))
-
-    def show_training_info(self) -> InfoMessage:
-        return InfoMessage('SportsWalking', self.duration, self.get_distance(),
-                           self.get_mean_speed(), self.get_spent_calories())
+        return ((self.CALORIES_MULTIPLIER_1 * self.weight
+                + ((self.get_mean_speed() * self.SPD_CNVRSN_FROM_KM_TO_M)**2
+                 / (self.height / self.CNVRSN_FROM_CM_TO_M))
+                * self.CALORIES_MULTIPLIER_2 * self.weight)
+                * (self.duration * self.H_IN_MIN))
 
 
 class Swimming(Training):
     """Training: swimming."""
+
     LEN_STEP = 1.38
-    K_1 = 1.1
-    K_2 = 2
+    CALORIES_SHIFT = 1.1
+    CALORIES_MULTIPLIER = 2
 
     def __init__(self, action: int, duration: float, weight: float,
                  length_pool: float, count_pool: float) -> None:
@@ -108,32 +98,29 @@ class Swimming(Training):
         self.length_pool = length_pool
         self.count_pool = count_pool
 
-    def get_distance(self) -> float:
-        return self.action * self.LEN_STEP / self.M_IN_KM
-
     def get_mean_speed(self) -> float:
         return (self.length_pool * self.count_pool / self.M_IN_KM
                 / self.duration)
 
     def get_spent_calories(self) -> float:
-        return ((self.get_mean_speed() + self.K_1) * self.K_2
-                * self.weight * self.duration)
-
-    def show_training_info(self) -> InfoMessage:
-        return InfoMessage('Swimming', self.duration, self.get_distance(),
-                           self.get_mean_speed(), self.get_spent_calories())
+        return ((self.get_mean_speed() + self.CALORIES_SHIFT)
+                * self.CALORIES_MULTIPLIER * self.weight * self.duration)
 
 
-def read_package(workout_type: str, data: list) -> Training:
+def read_package(workout_type: str, data: list[int]) -> Training:
     """Прочитать данные полученные от датчиков."""
-    training_codes = {
+    training_codes: Dict[str, Training] = {
         'SWM': Swimming,
         'RUN': Running,
         'WLK': SportsWalking
     }
-    if workout_type in training_codes:
-        obj: Training = training_codes[workout_type](*data)
-    return obj
+    try:
+        if workout_type in training_codes:
+            training: Training = training_codes[workout_type](*data)
+        return training
+    except Exception:
+        raise Exception('Ошибка! Проверьте в вводимых данных '
+                        'типы тренировок!') from None
 
 
 def main(training: Training) -> None:
