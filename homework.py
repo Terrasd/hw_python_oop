@@ -1,6 +1,3 @@
-from typing import Dict
-
-
 class InfoMessage:
     """Информационное сообщение о тренировке."""
 
@@ -42,14 +39,21 @@ class Training:
 
     def get_spent_calories(self) -> float:
         """Получить количество затраченных калорий."""
-        raise NotImplementedError('Ошибка! Не был определен метод для '
-                                  'подсчета затраченных каллорий!')
+        raise NotImplementedError(
+            'не был определен метод для '
+            'подсчета затраченных каллорий в классе {}'
+            .format(self.__class__.__name__)
+        )
 
     def show_training_info(self) -> InfoMessage:
         """Вернуть информационное сообщение о выполненной тренировке."""
-        return InfoMessage(self.__class__.__name__, self.duration,
-                           self.get_distance(), self.get_mean_speed(),
-                           self.get_spent_calories())
+        return InfoMessage(
+            self.__class__.__name__,
+            self.duration,
+            self.get_distance(),
+            self.get_mean_speed(),
+            self.get_spent_calories(),
+        )
 
 
 class Running(Training):
@@ -67,7 +71,9 @@ class Running(Training):
 class SportsWalking(Training):
     """Training: sports walking."""
 
-    SPD_CNVRSN_FROM_KM_TO_M = 0.278
+    M_IN_KM = 1000
+    SECONDS_IN_HOUR = 3600
+    SPD_CNVRSN_FROM_KM_TO_M = round(M_IN_KM / SECONDS_IN_HOUR, 3)
     CNVRSN_FROM_CM_TO_M = 100
     CALORIES_MULTIPLIER_1 = 0.035
     CALORIES_MULTIPLIER_2 = 0.029
@@ -109,18 +115,20 @@ class Swimming(Training):
 
 def read_package(workout_type: str, data: list[int]) -> Training:
     """Прочитать данные полученные от датчиков."""
-    training_codes: Dict[str, Training] = {
+    training_codes: dict[str, type(Training)] = {
         'SWM': Swimming,
         'RUN': Running,
         'WLK': SportsWalking
     }
-    try:
-        if workout_type in training_codes:
-            training: Training = training_codes[workout_type](*data)
-        return training
-    except Exception:
-        raise Exception('Ошибка! Проверьте в вводимых данных '
-                        'типы тренировок!') from None
+    if workout_type not in training_codes:
+        raise KeyError(
+            'Не существует тренировки с ключом {}. '
+            'Проверьте правильность входящих пакетов'
+            '(Ln 141, Col 5)'
+            .format(workout_type)
+        )
+    training: Training = training_codes[workout_type](*data)
+    return training
 
 
 def main(training: Training) -> None:
