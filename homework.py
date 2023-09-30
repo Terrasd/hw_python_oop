@@ -71,9 +71,7 @@ class Running(Training):
 class SportsWalking(Training):
     """Training: sports walking."""
 
-    M_IN_KM = 1000
-    SECONDS_IN_HOUR = 3600
-    SPD_CNVRSN_FROM_KM_TO_M = round(M_IN_KM / SECONDS_IN_HOUR, 3)
+    SPD_CNVRSN_FROM_KM_TO_M = round(Training.M_IN_KM / Training.H_IN_MIN**2, 3)
     CNVRSN_FROM_CM_TO_M = 100
     CALORIES_MULTIPLIER_1 = 0.035
     CALORIES_MULTIPLIER_2 = 0.029
@@ -122,10 +120,9 @@ def read_package(workout_type: str, data: list[int]) -> Training:
     }
     if workout_type not in training_codes:
         raise KeyError(
-            'Не существует тренировки с ключом {}. '
-            'Проверьте правильность входящих пакетов'
-            '(Ln 141, Col 5)'
-            .format(workout_type)
+            'Ошибка в переменной "workout_type". '
+            'Существующие тренировки в словаре "training_codes": '
+            f'{list(training_codes.keys())}'
         )
     training: Training = training_codes[workout_type](*data)
     return training
